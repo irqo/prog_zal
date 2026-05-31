@@ -4,6 +4,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.Runtime.ExceptionServices;
 
 namespace prog_zal
 {
@@ -12,36 +14,85 @@ namespace prog_zal
         static string[,] parking = new string[10, 10];
         static void Main(string[] args)
         {
+            string plik = "Parking.csv";
 
-            Console.WriteLine("===== PARKING =====");
-
-            for (int i = 0; i < 10; i++) //uzupełnienie pustegu parkingu (z nagłówkami)
+            //sprawdzenie, czy plik istnieje
+            if (!File.Exists(plik))                                                     
             {
-                for (int j = 0; j < 10; j++)
+                //tworzenie pustego parkingu z naglowkami
+                for (int i = 0; i < parking.GetLength(0); i++)                          
                 {
-                    if (i == 0)
+                    for (int j = 0; j < parking.GetLength(1); j++)
                     {
-                        Program.parking[i, j] = Convert.ToString(j);
-                    }
-                    else if (j == 0)
-                    {
-                        Program.parking[i, j] = Convert.ToString(i);
-                    }
-                    else
-                    {
-                        Program.parking[i, j] = ".";
-                    }
-                    Console.Write($"{Program.parking[i, j]} ");
+                        if (i == 0)
+                        {
+                            Program.parking[i, j] = Convert.ToString(j);
+                        }
+                        else if (j == 0)
+                        {
+                            Program.parking[i, j] = Convert.ToString(i);
+                        }
+                        else
+                        {
+                            Program.parking[i, j] = ".";
+                        }
+                        Console.Write($"{Program.parking[i, j]} ");
 
+                    }
+                    Console.WriteLine();
                 }
+
+                //tworzenie pliku (jesli nie istnieje) i uzupelnianie pustym parkingiem
+                string[] linia = new string[parking.GetLength(1)];
+                using (StreamWriter sw = new StreamWriter(plik))                        
+                {
+                    for (int i = 0; i < parking.GetLength(0); i++)
+                    {
+
+                        for (int j = 0; j < parking.GetLength(1); j++)
+                        {
+                            linia[j] = parking[i, j] ?? "";
+                        }
+
+                        sw.WriteLine(string.Join(";", linia));
+                    }
+                }
+                Console.WriteLine(); 
+                Console.WriteLine("Utworzylem plik i uzupelnilem pierwotnymi danymi.");
                 Console.WriteLine();
             }
+
+            //wyswietlanie parkingu z pliku (jeżeli plik istnieje)
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine("================================ PARKING ================================");
+                string[] linie = File.ReadAllLines(plik);
+
+                for (int i = 0; i < linie.Length; i++)
+                {
+                    string[] kolumny = linie[i].Split(';');
+
+                    for (int j = 0; j < kolumny.Length; j++)
+                    {
+                        Console.Write($"{kolumny[j]}\t");
+                    }
+                    Console.WriteLine("\n");
+                }
+                Console.WriteLine("================================ PARKING ================================");
+            }
+            Console.WriteLine();
+            Console.WriteLine();
+
+
+
             Menu();
         }
 
 
 
-        //================== MENU ==================
+
+        //==================================== MENU ====================================
         static void Menu()
         {
             char c = 'c';
@@ -57,7 +108,7 @@ namespace prog_zal
                     Console.WriteLine("| 3. Zabierz pojazd                              |");
                     Console.WriteLine("| 4. Przeparkuj pojazd na inne miejsce           |");
                     Console.WriteLine("| 5. Sprawdz, czy miejsce jest puste, czy zajete |");
-                    Console.WriteLine("| 0. Zakoncz działanie aplikacji                 |");
+                    Console.WriteLine("| 0. Zakoncz dzialanie aplikacji                 |");
                     Console.WriteLine(" ===================== MENU =====================");
 
                     Console.WriteLine();
@@ -70,11 +121,11 @@ namespace prog_zal
                     }
                     switch (c)
                     {
-                        case '1': SprawdzParking(Program.parking); break;
-                        case '2': ParkujPojazd(Program.parking); break;
-                        case '3': ZabierzPojazd(Program.parking); break;
-                        case '4': ZmienMiejsce(Program.parking); break;
-                        case '5': SprawdzZajetosc(Program.parking); break;
+                        case '1': SprawdzParking(Program.parking, "Parking.csv"); break;
+                        case '2': ParkujPojazd(Program.parking, "Parking.csv"); break;
+                        case '3': ZabierzPojazd(Program.parking, "Parking.csv"); break;
+                        case '4': ZmienMiejsce(Program.parking, "Parking.csv"); break;
+                        case '5': SprawdzZajetosc(Program.parking, "Parking.csv"); break;
                         case '0': Console.WriteLine("KONIEC"); break;
                         default: Console.WriteLine("Bledny wybor"); break;
                     }
@@ -87,61 +138,181 @@ namespace prog_zal
                 Menu();
             }
         }
+        //==================================== MENU ====================================
 
 
 
-        //================== SPRAWDZANIE PARKINGU ==================
-        static void SprawdzParking(string[,] parking)
+
+
+        //==================================== 1. SPRAWDZANIE PARKINGU ====================================
+        static void SprawdzParking(string[,] parking, string plik)
         {
             Console.WriteLine();
-            Console.WriteLine("===== PARKING =====");
-            for (int i = 0; i < 10; i++)
+            Console.WriteLine("================================ PARKING ================================");
+            string[] linie = File.ReadAllLines(plik);
+
+            for (int i = 0; i < linie.Length; i++)
             {
-                for (int j = 0; j < 10; j++)
+                string[] kolumny = linie[i].Split(';');
+
+                for (int j = 0; j < kolumny.Length; j++)
                 {
-                    Console.Write($"{parking[i, j]} ");
+                    Console.Write($"{kolumny[j]}\t");
                 }
-                Console.WriteLine();
+                Console.WriteLine("\n");
             }
-
+            Console.WriteLine("================================ PARKING ================================");
         }
+        //==================================== 1. SPRAWDZANIE PARKINGU ====================================
 
 
 
-        //================== PARKOWANIE POJAZDU ==================
-        static void ParkujPojazd(string[,] parking)
+
+        //==================================== 2. PARKOWANIE POJAZDU ====================================
+        static void ParkujPojazd(string[,] parking, string plik)
         {
+            //wczytanie pliku
+            if (File.Exists(plik))
+            {
+                string[] linie = File.ReadAllLines(plik);
+
+                for (int i = 0; i < linie.Length; i++)
+                {
+                    string[] kolumny = linie[i].Split(';');
+
+                    for (int j = 0; j < kolumny.Length; j++)
+                    {
+                        parking[i, j] = kolumny[j];
+                    }
+                }
+            }
+            
+            //zmiana w konsoli
             Console.WriteLine();
             Console.WriteLine("Wybierz miejsce parkingowe");
-            Console.Write("Podaj rząd (od 1 do 9): ");                 
-            int r = Convert.ToInt32(Console.ReadLine());
-            Console.Write("Podaj miejsce od lewej (od 1 do 9): ");  
-            int c = Convert.ToInt32(Console.ReadLine());
+            int r;
+            int c;
+
+            Console.WriteLine("Skad chcesz zabrac samochod?");
+
+            while (true)
+            {
+                Console.Write("Podaj rzad (od 1 do 9): ");
+                r = Convert.ToInt32(Console.ReadLine());
+                
+                if (r >= 1 && r <= 9)
+                {
+                    break;
+                }
+                Console.WriteLine();
+                Console.WriteLine("BLAD! Musisz podac wartosc z zakresu 1-9!");
+            }
+
+            while (true)
+            {
+                Console.Write("Podaj miejsce od lewej (od 1 do 9): ");
+                c = Convert.ToInt32(Console.ReadLine());
+                
+                if (c >= 1 && c <= 9)
+                {
+                    break;
+                }
+                Console.WriteLine();
+                Console.WriteLine("BLAD! Musisz podac wartosc z zakresu 1-9!");
+
+            }
 
             if (parking[r, c] == "X")
             {
                 Console.WriteLine();
-                Console.WriteLine("Miejsce zajęte, nie możesz tam zaparkować");
+                Console.WriteLine("Miejsce zajete, nie mozesz tam zaparkowac");
             }
             else
             {
                 parking[r, c] = "X";
                 Console.WriteLine();
-                Console.WriteLine($"Twoje miejsce jest w rzędzie {r} i jest to miejsce {c}.");
+                Console.WriteLine($"Twoje miejsce jest w rzedzie {r} i jest to miejsce {c}.");
             }
-        }
 
+            //zapis zamian do pliku
+            using (StreamWriter sw = new StreamWriter(plik))      
+            {
+                for (int i = 0; i < parking.GetLength(0); i++)
+                {
+                    for (int j = 0; j < parking.GetLength(1); j++)
+                    {
+                        sw.Write(parking[i, j] ?? ".");
+                        
+                        if (j < parking.GetLength(1) - 1)
+                        {
+                            sw.Write(";");
+                        }
+                    }
 
-
-        //================== ZABIERANIE POJAZDU ==================
-        static void ZabierzPojazd(string[,] parking)
-        {
+                    sw.WriteLine();
+                }
+            }
             Console.WriteLine();
-            Console.WriteLine("Skąd chcesz zabrać samochód?");
-            Console.Write("Podaj rząd (od 1 do 9): ");                 
-            int r = Convert.ToInt32(Console.ReadLine());
-            Console.Write("Podaj miejsce od lewej (od 1 do 9): ");    
-            int c = Convert.ToInt32(Console.ReadLine());
+        }
+        //==================================== 2. PARKOWANIE POJAZDU ====================================
+
+
+
+
+
+
+        //==================================== 3. ZABIERANIE POJAZDU ====================================
+        static void ZabierzPojazd(string[,] parking, string plik)
+        {
+            //wczytanie pliku
+            if (File.Exists(plik))
+            {
+                string[] linie = File.ReadAllLines(plik);
+
+                for (int i = 0; i < linie.Length; i++)
+                {
+                    string[] kolumny = linie[i].Split(';');
+
+                    for (int j = 0; j < kolumny.Length; j++)
+                    {
+                        parking[i, j] = kolumny[j];
+                    }
+                }
+            }
+
+            //zmiana w konsoli
+            Console.WriteLine();
+            int r;
+            int c;
+
+            Console.WriteLine("Skad chcesz zabrac samochod?");
+
+            while (true)
+            {
+                Console.Write("Podaj rzad (od 1 do 9): ");                 
+                r = Convert.ToInt32(Console.ReadLine());
+                
+                if (r >=1 && r <= 9)
+                {
+                    break;
+                }
+                Console.WriteLine();
+                Console.WriteLine("BLAD! Musisz podac wartosc z zakresu 1-9!");
+            }
+            
+            while (true)
+            {
+                Console.Write("Podaj miejsce od lewej (od 1 do 9): ");    
+                c = Convert.ToInt32(Console.ReadLine());
+                
+                if (c >=1 && c <= 9)
+                {
+                    break;
+                }
+                Console.WriteLine();
+                Console.WriteLine("BLAD! Musisz podac wartosc z zakresu 1-9!");
+            }
+            
 
             if (parking[r, c] == ".")
             {
@@ -154,22 +325,89 @@ namespace prog_zal
                 Console.WriteLine();
                 Console.WriteLine("Szerokiej drogi!");
             }
+
+
+            //zapis zmian do pliku
+            using (StreamWriter sw = new StreamWriter(plik))                        
+            {
+                for (int i = 0; i < parking.GetLength(0); i++)
+                {
+                    for (int j = 0; j < parking.GetLength(1); j++)
+                    {
+                        sw.Write(parking[i, j] ?? ".");
+                        
+                        if (j < parking.GetLength(1) - 1)
+                        {
+                            sw.Write(";");
+                        }
+                    }
+
+                    sw.WriteLine();
+                }
+            }
+            Console.WriteLine();
         }
+        //==================================== 3. ZABIERANIE POJAZDU ====================================
 
 
 
-        //================== PRZEPARKOWANIE POJAZDU ==================
-        static void ZmienMiejsce(string[,] parking)
+
+
+        //==================================== 4. PRZEPARKOWANIE POJAZDU ====================================
+        static void ZmienMiejsce(string[,] parking, string plik)
         {
-            Console.WriteLine();
-            Console.WriteLine("Skąd chcesz zabrać samochód?");
-            Console.Write("Podaj, w którym rzędzie stoi Twój samochód (od 1 do 9): ");    
-            int r1 = Convert.ToInt32(Console.ReadLine());
-            Console.Write("Podaj, na którym miejscy stoi Twój samochód (od 1 do 9): ");     
-            int c1 = Convert.ToInt32(Console.ReadLine());
+            //wczytanie pliku
+            if (File.Exists(plik))
+            {
+                string[] linie = File.ReadAllLines(plik);
 
+                for (int i = 0; i < linie.Length; i++)
+                {
+                    string[] kolumny = linie[i].Split(';');
 
+                    for (int j = 0; j < kolumny.Length; j++)
+                    {
+                        parking[i, j] = kolumny[j];
+                    }
+                }
+            }
+
+            //zmiana w konsoli
             Console.WriteLine();
+            int r1;
+            int c1;
+            int r2;
+            int c2;
+
+            Console.WriteLine("Skad chcesz zabrac samochod?");
+            
+            while (true)
+            {
+                Console.Write("Podaj, w ktorym rzedzie stoi Twoj samochod (od 1 do 9): ");
+                r1 = Convert.ToInt32(Console.ReadLine());
+                
+                if (r1 >= 1 && r1 <= 9)
+                {
+                    break;
+                }
+                Console.WriteLine();
+                Console.WriteLine("BLAD! Musisz podac wartosc z zakresu 1-9!");
+            }
+
+            while (true)
+            {
+                Console.Write("Podaj, na ktorym miejscu stoi Twoj samochod (od 1 do 9): ");
+                c1 = Convert.ToInt32(Console.ReadLine());
+                
+                if (c1 >= 1 && c1 <= 9)
+                {
+                    break;
+                }
+                Console.WriteLine();
+                Console.WriteLine("BLAD! Musisz podac wartosc z zakresu 1-9!");
+            }
+            Console.WriteLine();
+            
             if (parking[r1, c1] == ".")
             {
                 Console.WriteLine("Na tym miejscu nie ma zaparkowanego samochodu");
@@ -177,45 +415,127 @@ namespace prog_zal
             else
             {
                 Console.WriteLine();
-                Console.WriteLine("Podaj, gdzie chcesz zaparkować");
-                Console.WriteLine("Podaj, w którym rzędzie chcesz zaparkować: ");
-                int r2 = Convert.ToInt32(Console.ReadLine());
-                Console.WriteLine("Podaj, na którym miejscu chcesz zaparkować: ");
-                int c2 = Convert.ToInt32(Console.ReadLine());
+                Console.WriteLine("Podaj, gdzie chcesz zaparkowac:");
 
-                Console.WriteLine();
-                while (parking[r2, c2] != "X")
+                while (true)
                 {
-                    if (parking[r2, c2] == "X")
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine("Miejsce zajęte, nie możesz tam zaparkować");
-                    }
-                    else
-                    {
-                        parking[r2, c2] = "X";
-                        parking[r1, c1] = ".";
+                    Console.Write("Podaj, w którym rzedzie chcesz zaparkowac: ");
+                    r2 = Convert.ToInt32(Console.ReadLine());
 
-                        Console.WriteLine();
-                        Console.WriteLine($"Twoje nowe miejsce parkingowe miejsce jest w rzędzie {r2} i jest to miejsce {c2}.");
+                    if ( r2 >= 1 && r2 <= 9)
+                    {
+                        break;
+                    }
+                    Console.WriteLine();
+                    Console.WriteLine("BLAD! Musisz podac wartosc z zakresu 1-9!");
+                }    
+                
+                while (true)
+                {
+                    Console.Write("Podaj, na ktorym miejscu chcesz zaparkowac: ");
+                    c2 = Convert.ToInt32(Console.ReadLine());
+
+                    if (c2 >= 1 && c2 <= 9)
+                    {
+                        break;
+                    }
+                    Console.WriteLine();
+                    Console.WriteLine("BLAD! Musisz podac wartosc z zakresu 1-9!");
+                }
+                Console.WriteLine();
+                
+                if (parking[r2, c2] == "X")
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Miejsce zajete, nie mozesz tam przeparkowac samochodu.");
+                }
+                else
+                {
+                    parking[r2, c2] = "X";
+                    parking[r1, c1] = ".";
+
+                    Console.WriteLine();
+                    Console.WriteLine($"Twoje nowe miejsce parkingowe miejsce jest w rzedzie {r2} i jest to miejsce {c2}.");
+                }
+            }
+
+            //zapis zmian do pliku
+            using (StreamWriter sw = new StreamWriter(plik))
+            {
+                for (int i = 0; i < parking.GetLength(0); i++)
+                {
+                    for (int j = 0; j < parking.GetLength(1); j++)
+                    {
+                        sw.Write(parking[i, j] ?? ".");
+                        
+                        if (j < parking.GetLength(1) - 1)
+                        {
+                            sw.Write(";");
+                        }
+                    }
+
+                    sw.WriteLine();
+                }
+            }
+            Console.WriteLine();
+
+        }
+        //==================================== 4. PRZEPARKOWANIE POJAZDU ====================================
+
+
+
+
+
+        //==================================== 5. SPRAWDZENIE ZAJĘTOŚCI MIEJSCA ====================================
+        static void SprawdzZajetosc(string[,] parking, string plik)
+        {
+            //wczytanie pliku
+            if (File.Exists(plik))
+            {
+                string[] linie = File.ReadAllLines(plik);
+
+                for (int i = 0; i < linie.Length; i++)
+                {
+                    string[] kolumny = linie[i].Split(';');
+
+                    for (int j = 0; j < kolumny.Length; j++)
+                    {
+                        parking[i, j] = kolumny[j];
                     }
                 }
             }
-        }
 
-
-
-
-
-        //================== SPRAWDZENIE ZAJĘTOŚCI ==================
-        static void SprawdzZajetosc(string[,] parking)
-        {
+            //sprawdzenie zajętości
             Console.WriteLine();
+            int r;
+            int c;
             Console.WriteLine("Sprawdz, czy miejsce jest wolne, czy zajete");
-            Console.WriteLine("W ktorym rzedzie sprawdzamy miesjsce (od 0 do 9): ");
-            int r = Convert.ToInt32(Console.ReadLine());
-            Console.WriteLine($"Ktore miejsce w rzedzie {r} sprawdzamy (od 0 do 9): ");
-            int c = Convert.ToInt32(Console.ReadLine());
+
+            while (true)
+            {
+                Console.WriteLine("W ktorym rzedzie sprawdzamy miesjsce (od 0 do 9): ");
+                r = Convert.ToInt32(Console.ReadLine());
+
+                if (r >= 1 && r <= 9)
+                {
+                    break;
+                }
+                Console.WriteLine();
+                Console.WriteLine("BLAD! Musisz podac wartosc z zakresu 1-9!");
+            }
+            
+            while (true)
+            {
+                Console.WriteLine($"Ktore miejsce w rzedzie {r} sprawdzamy (od 0 do 9): ");
+                c = Convert.ToInt32(Console.ReadLine());
+
+                if (c >= 1 && c <= 9)
+                {
+                    break;
+                }
+                Console.WriteLine();
+                Console.WriteLine("BLAD! Musisz podac wartosc z zakresu 1-9!");
+            }
 
             if (parking[r, c] == ".")
             {
@@ -229,5 +549,6 @@ namespace prog_zal
             }
 
         }
+        //==================================== 5. SPRAWDZENIE ZAJĘTOŚCI MIEJSCA ====================================
     }
 }
